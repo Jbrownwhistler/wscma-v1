@@ -1,0 +1,129 @@
+# ============================================================================
+# WSCMA — .htaccess
+# Fichier de configuration Apache pour le site institutionnel WSCMA
+# World Sea Cucumber Market Authority · localhost:8888/wscma/
+# ============================================================================
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 1 — SÉCURITÉ DE BASE
+# ────────────────────────────────────────────────────────────────────────────
+
+# Bloquer le listing des répertoires
+Options -Indexes
+
+# Bloquer l'accès direct aux fichiers de configuration
+# Protéger config/*.php : retourner 403 si accès direct
+<FilesMatch "^(constants|lang)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Bloquer accès direct aux fichiers data/*.php
+# (ils sont inclus via PHP, pas accédés via URL)
+<DirectoryMatch "^.*/config/">
+    Require all denied
+</DirectoryMatch>
+
+<DirectoryMatch "^.*/data/">
+    Require all denied
+</DirectoryMatch>
+
+# Bloquer accès direct au dossier storage/
+<DirectoryMatch "^.*/storage/">
+    Require all denied
+</DirectoryMatch>
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 2 — RÉÉCRITURE D'URL
+# ────────────────────────────────────────────────────────────────────────────
+
+# Activer le moteur de réécriture
+RewriteEngine On
+
+# Rediriger vers HTTPS en production (commenté pour MAMP)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Supprimer le slash final sur les URLs (sauf dossiers)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [R=301,L]
+
+# Page 404 personnalisée
+ErrorDocument 404 /wscma/404.php
+ErrorDocument 403 /wscma/404.php
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 3 — COMPRESSION GZIP (mod_deflate)
+# ────────────────────────────────────────────────────────────────────────────
+
+# Activer la compression pour HTML, CSS, JS, PHP, JSON, XML, SVG
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE application/x-httpd-php
+</IfModule>
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 4 — CACHE NAVIGATEUR (mod_expires)
+# ────────────────────────────────────────────────────────────────────────────
+
+# Images PNG/JPG/SVG/ICO : cache 30 jours
+# CSS et JavaScript     : cache 7 jours
+# HTML et PHP           : pas de cache (contenu dynamique)
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Images : cache 30 jours
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/x-icon "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+
+    # CSS et JavaScript : cache 7 jours
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType text/javascript "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+
+    # HTML et PHP : pas de cache (contenu dynamique)
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/x-httpd-php "access plus 0 seconds"
+</IfModule>
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 5 — EN-TÊTES DE SÉCURITÉ HTTP
+# ────────────────────────────────────────────────────────────────────────────
+
+<IfModule mod_headers.c>
+    # Protection contre le clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # Protection contre le MIME sniffing
+    Header set X-Content-Type-Options "nosniff"
+
+    # Protection XSS pour les navigateurs compatibles
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Politique de référent
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Politique de permissions
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Strict Transport Security (activé en production uniquement)
+    # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ────────────────────────────────────────────────────────────────────────────
+# SECTION 6 — ENCODAGE ET TYPES MIME
+# ────────────────────────────────────────────────────────────────────────────
+
+# Déclarer le charset UTF-8 pour tous les fichiers texte
+AddCharset UTF-8 .php .html .css .js .json .txt .xml .svg
