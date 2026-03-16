@@ -229,7 +229,7 @@ function sauvegarderLigne(string $fichier, string $ligne): bool {
     // Créer le dossier parent si nécessaire
     $dossier = dirname($fichier);
     if (!is_dir($dossier)) {
-        mkdir($dossier, 0755, true);
+        mkdir($dossier, 0750, true);
     }
     // Horodatage + données + saut de ligne
     $contenu = date('Y-m-d H:i:s') . ' | ' . $ligne . PHP_EOL;

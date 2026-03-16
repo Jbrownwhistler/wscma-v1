@@ -39,6 +39,9 @@ if (isset($_GET['lang'])) {
     // Rediriger proprement sans le paramètre lang dans l'URL
     // pour éviter qu'il reste visible et puisse être mis en cache
     $urlPropre = strtok($_SERVER['REQUEST_URI'], '?');
+    // Sécurité : nettoyer l'URL pour éviter l'injection d'en-têtes HTTP
+    $urlPropre = filter_var($urlPropre, FILTER_SANITIZE_URL);
+    $urlPropre = preg_replace('/[\r\n]/', '', $urlPropre);
     header('Location: ' . $urlPropre);
     exit;
 }
